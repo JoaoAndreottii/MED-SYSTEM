@@ -1,0 +1,417 @@
+// ===== MED-SYSTEM — Prisma Schema =====
+// Medical clinic automation system with multi-tenant support
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== Multi-Tenant Foundation =====
+model Clinic {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  phone         String?
+  address       String?
+  city          String?
+  state         String?
+  zipCode       String?  @map("zip_code")
+
+  // Configuration
+  timezone      String   @default("America/Sao_Paulo")
+  currency      String   @default("BRL")
+  workingDays   String[] @default(["MON", "TUE", "WED", "THU", "FRI", "SAT"])
+  workingHours  String   @default("09:00-18:00")  // HH:mm-HH:mm
+
+  // Onboarding & Status
+  isActive      Boolean  @default(true)
+  onboardedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  users         User[]
+  patients      Patient[]
+  doctors       Doctor[]
+  appointments  Appointment[]
+  reminders     Reminder[]
+  exams         Exam[]
+  invoices      Invoice[]
+  settings      ClinicSettings?
+
+  @@index([isActive])
+  @@map("clinics")
+}
+
+// ===== Clinic Settings (per clinic configuration) =====
+model ClinicSettings {
+  id              String   @id @default(cuid())
+  clinicId        String   @unique
+  clinic          Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  // Integrations
+  twilio          String?  @map("twilio_config")  // JSON
+  resend          String?  @map("resend_config")  // JSON
+  openai          String?  @map("openai_config")  // JSON
+
+  // Features
+  enableReminders Boolean  @default(true)
+  enableExams     Boolean  @default(true)
+  enableMarketing Boolean  @default(true)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("clinic_settings")
+}
+
+// ===== Users & Authentication =====
+enum UserRole {
+  ADMIN       // Clinic owner/admin
+  DOCTOR      // Doctor/specialist
+  RECEPTIONIST // Receptionist/staff
+  PATIENT     // Patient (self-service user)
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Bcrypt hash
+  name      String
+  phone     String?
+  avatar    String?  // Profile picture URL
+  role      UserRole
+
+  // Relations
+  clinics   Clinic[]
+  doctor    Doctor?   // If role == DOCTOR
+
+  // Account status
+  isActive  Boolean  @default(true)
+  lastLogin DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([isActive])
+  @@map("users")
+}
+
+// ===== Doctors =====
+model Doctor {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  clinicId    String
+  clinic      Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  specialization String?
+  licenseNumber  String?
+  crm            String?  // Conselho Regional de Medicina
+  isAvailable    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  appointments Appointment[]
+
+  @@index([clinicId])
+  @@map("doctors")
+}
+
+// ===== Patients (Core CRM) =====
+model Patient {
+  id           String   @id @default(cuid())
+  clinicId     String
+  clinic       Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  // Personal Info
+  name         String
+  email        String?
+  phone        String
+  dateOfBirth  DateTime?
+  document     String?  // CPF/RG
+  address      String?
+  city         String?
+  state        String?
+  zipCode      String?  @map("zip_code")
+
+  // CRM Fields
+  segment      String?  // VIP, regular, inactive, at_risk
+  totalVisits  Int      @default(0)
+  totalSpent   Decimal  @default(0) @db.Decimal(10, 2)
+  lastVisit    DateTime?
+  notes        String?  @db.Text
+
+  // Contact Preferences
+  preferredContact String  @default("PHONE") // PHONE, EMAIL, SMS
+  optedInMarketing Boolean  @default(true)
+  optedInReminders Boolean  @default(true)
+
+  // Metrics
+  noShowCount  Int      @default(0)
+  cancellations Int     @default(0)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  appointments Appointment[]
+  exams        Exam[]
+  invoices     Invoice[]
+  reminders    Reminder[]
+  feedback     PostConsultationFeedback[]
+
+  @@unique([clinicId, email])
+  @@unique([clinicId, phone])
+  @@index([clinicId])
+  @@index([segment])
+  @@map("patients")
+}
+
+// ===== Appointments (Core Operations) =====
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+  RESCHEDULED
+}
+
+model Appointment {
+  id          String   @id @default(cuid())
+  clinicId    String
+  clinic      Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  doctorId    String
+  doctor      Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  // Scheduling
+  startTime   DateTime
+  endTime     DateTime
+  duration    Int      @default(30)  // minutes
+  status      AppointmentStatus @default(SCHEDULED)
+
+  // Details
+  reason      String?
+  notes       String?  @db.Text
+
+  // Reminders
+  reminderSentAt  DateTime?
+  lastReminderAt  DateTime?
+  reminderCount   Int      @default(0)
+
+  // Cancellation tracking
+  cancelledAt DateTime?
+  cancelledBy String?
+  cancellationReason String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  reminders   Reminder[]
+  feedback    PostConsultationFeedback?
+
+  @@index([clinicId, startTime])
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([status])
+  @@map("appointments")
+}
+
+// ===== Reminders (SMS/Email) =====
+enum ReminderType {
+  APPOINTMENT    // Reminder before appointment
+  PRESCRIPTION   // Prescription refill reminder
+  EXAM           // Exam reminder
+  FOLLOW_UP      // Follow-up reminder
+  MARKETING      // Marketing campaign
+  CUSTOM         // Custom reminder
+}
+
+enum ReminderStatus {
+  PENDING
+  SENT
+  FAILED
+  CANCELLED
+  BOUNCED
+}
+
+model Reminder {
+  id          String   @id @default(cuid())
+  clinicId    String
+  clinic      Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  appointmentId String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  // Details
+  type        ReminderType
+  message     String   @db.Text
+  status      ReminderStatus @default(PENDING)
+
+  // Scheduling
+  sendDate    DateTime
+  sentAt      DateTime?
+
+  // Retry tracking
+  attempts    Int      @default(0)
+  lastError   String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([clinicId, status])
+  @@index([patientId, sendDate])
+  @@index([sendDate])
+  @@map("reminders")
+}
+
+// ===== Exams (Scheduling & Tracking) =====
+enum ExamStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+}
+
+model Exam {
+  id          String   @id @default(cuid())
+  clinicId    String
+  clinic      Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  // Details
+  name        String
+  description String?  @db.Text
+  status      ExamStatus @default(SCHEDULED)
+
+  // Scheduling
+  scheduledDate DateTime
+  completedAt   DateTime?
+
+  // Results
+  resultUrl   String?
+  notes       String?  @db.Text
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([clinicId])
+  @@index([patientId, status])
+  @@map("exams")
+}
+
+// ===== Financial (Invoicing & Payments) =====
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  PIX
+  BANK_TRANSFER
+  INSURANCE
+}
+
+model Invoice {
+  id          String   @id @default(cuid())
+  clinicId    String
+  clinic      Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  // Invoice Details
+  invoiceNumber String  @unique
+  amount      Decimal  @db.Decimal(10, 2)
+  status      InvoiceStatus @default(ISSUED)
+
+  // Dates
+  issueDate   DateTime
+  dueDate     DateTime
+  paidAt      DateTime?
+
+  // Payment
+  paymentMethod PaymentMethod?
+
+  // Notes
+  description String?  @db.Text
+  notes       String?  @db.Text
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([clinicId, status])
+  @@index([patientId, status])
+  @@index([dueDate])
+  @@map("invoices")
+}
+
+// ===== Post-Consultation Feedback =====
+model PostConsultationFeedback {
+  id            String   @id @default(cuid())
+  appointmentId String   @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  patientId     String
+  patient       Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  // Feedback
+  rating        Int      // 1-5 stars
+  comment       String?  @db.Text
+
+  // Issues
+  hadIssues     Boolean  @default(false)
+  issueDescription String? @db.Text
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([patientId])
+  @@map("post_consultation_feedback")
+}
+
+// ===== Audit Log (LGPD & Compliance) =====
+model AuditLog {
+  id          String   @id @default(cuid())
+  clinicId    String
+  userId      String?
+
+  action      String   // CREATE, UPDATE, DELETE, READ
+  entity      String   // User, Patient, Appointment
+  entityId    String
+  changes     String?  @db.Text  // JSON of what changed
+
+  ipAddress   String?
+  userAgent   String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([clinicId, createdAt])
+  @@index([entityId])
+  @@map("audit_logs")
+}
