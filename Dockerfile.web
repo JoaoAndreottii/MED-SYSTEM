@@ -2,28 +2,24 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy ONLY web files and root package
-COPY package.json package-lock.json ./
+# Copy all necessary files
+COPY package.json package-lock.json tsconfig.json ./
 COPY apps/web ./apps/web
 
-# Install root deps
-RUN npm install --legacy-peer-deps
-
-# Go to web directory and install its specific deps
-WORKDIR /app/apps/web
+# Install all dependencies
 RUN npm install --legacy-peer-deps
 
 # Build Next.js
+WORKDIR /app/apps/web
 RUN npm run build
 
-# Remove node_modules and reinstall production-only
+# Go back and remove dev dependencies
 WORKDIR /app
-RUN rm -rf node_modules apps/web/node_modules
-RUN npm install --legacy-peer-deps --omit=dev
-WORKDIR /app/apps/web
-RUN npm install --legacy-peer-deps --omit=dev
+RUN npm prune --omit=dev
 
 EXPOSE 3001
 ENV NODE_ENV=production
 ENV NEXT_PUBLIC_API_URL=https://med-systemapi-production.up.railway.app
+
+WORKDIR /app/apps/web
 CMD ["npm", "start"]
