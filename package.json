@@ -4,8 +4,7 @@
   "description": "Medical clinic automation system - MVP with 9 core modules",
   "private": true,
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/*"
   ],
   "scripts": {
     "dev": "npm -w @med-system/api run dev",
