@@ -1,0 +1,36 @@
+import express, { Request, Response } from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import compression from 'compression';
+import healthRouter from './routes/health';
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware
+app.use(helmet());
+app.use(cors());
+app.use(compression());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.use('/', healthRouter);
+
+// 404
+app.use((req: Request, res: Response) => {
+  res.status(404).json({ error: 'Not Found' });
+});
+
+// Error handler
+app.use((err: Error, req: Request, res: Response) => {
+  console.error(err);
+  res.status(500).json({ error: 'Internal Server Error' });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Server listening on port ${PORT}`);
+});
+
+export default app;
