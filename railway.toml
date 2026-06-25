@@ -4,7 +4,8 @@
 
 [build]
 builder = "dockerfile"
-dockerfile = "./apps/api/Dockerfile"
+dockerfile = "apps/api/Dockerfile"
+context = "."
 
 [deploy]
 startCommand = "node apps/api/dist/server.js"
