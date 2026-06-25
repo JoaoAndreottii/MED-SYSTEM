@@ -4,11 +4,11 @@
 
 [build]
 builder = "dockerfile"
-dockerfile = "apps/api/Dockerfile"
+dockerfile = "Dockerfile"
 context = "."
 
 [deploy]
-startCommand = "node apps/api/dist/server.js"
+startCommand = "node /app/dist/server.js"
 restartPolicyMaxRetries = 5
 
 [environments.production]
