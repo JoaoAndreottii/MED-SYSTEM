@@ -7,16 +7,9 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "npm -w @med-system/api run dev",
-    "build": "npm -r --exclude=@med-system/web run build && npm -w @med-system/web run build",
-    "test": "npm -r run test",
-    "test:watch": "npm -r run test:watch",
-    "lint": "npm -r run lint",
-    "format": "npm -r run format",
-    "setup": "npm install && npm run prisma:generate",
-    "prisma:generate": "npm -w @med-system/api run prisma:generate",
-    "prisma:migrate": "npm -w @med-system/api run prisma:migrate",
-    "prisma:push": "npm -w @med-system/api run prisma:push",
+    "dev": "cd apps/api && npm run dev",
+    "build": "cd apps/api && npm run build",
+    "test": "cd apps/api && npm run test",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:reset": "docker-compose down -v && docker-compose up -d"
