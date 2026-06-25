@@ -32,10 +32,8 @@ COPY apps/api/package.json ./apps/api/
 RUN npm install --legacy-peer-deps --omit=dev
 
 # Copy built app
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-
-WORKDIR /app/apps/api
+COPY --from=builder /app/apps/api/dist /app/dist
+COPY --from=builder /app/apps/api/prisma /app/prisma
 
 EXPOSE 3000
 
@@ -43,4 +41,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})" || exit 1
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/server.js"]
+CMD ["node", "/app/dist/server.js"]
