@@ -1,0 +1,113 @@
+# Railway Configuration for Med-System
+# https://railway.app/docs
+
+[build]
+# Build command - install and build everything
+builder = "dockerfile"
+dockerfile = "./apps/api/Dockerfile"
+context = "."
+
+[deploy]
+# Deployment configuration
+startCommand = "node apps/api/dist/server.js"
+# Prisma migration on deploy (optional)
+preDeploy = "npm -w @med-system/api run prisma:deploy"
+
+[[services]]
+# PostgreSQL Database
+name = "database"
+image = "postgres:16-alpine"
+icon = "postgres"
+primaryPlugin = true
+
+[[services.variables]]
+name = "POSTGRES_USER"
+value = "meduser"
+
+[[services.variables]]
+name = "POSTGRES_PASSWORD"
+value = "${{POSTGRES_PASSWORD}}"
+
+[[services.variables]]
+name = "POSTGRES_DB"
+value = "medsystem"
+
+[[services.ports]]
+port = 5432
+public = false
+
+[[services]]
+# Redis Cache & Queue
+name = "redis"
+image = "redis:7-alpine"
+icon = "redis"
+
+[[services.ports]]
+port = 6379
+public = false
+
+[[services]]
+# API Service
+name = "api"
+icon = "nodejs"
+buildCommand = "npm install && npm run build"
+startCommand = "node apps/api/dist/server.js"
+
+[[services.variables]]
+# Database
+name = "DATABASE_URL"
+value = "postgresql://${{POSTGRES_USER}}:${{POSTGRES_PASSWORD}}@${{database.RAILWAY_PRIVATE_DOMAIN}}:5432/medsystem"
+
+# Redis
+name = "REDIS_HOST"
+value = "${{redis.RAILWAY_PRIVATE_DOMAIN}}"
+
+name = "REDIS_PORT"
+value = "6379"
+
+# Environment
+name = "NODE_ENV"
+value = "production"
+
+name = "PORT"
+value = "3000"
+
+# JWT Secret (must be set in Railway UI)
+name = "JWT_SECRET"
+value = "${{JWT_SECRET}}"
+
+name = "JWT_EXPIRES_IN"
+value = "24h"
+
+# Logging
+name = "LOG_LEVEL"
+value = "info"
+
+# Queue Configuration
+name = "QUEUE_CONCURRENCY"
+value = "5"
+
+name = "QUEUE_MAX_RETRIES"
+value = "3"
+
+name = "QUEUE_RETRY_DELAY_MS"
+value = "5000"
+
+# Application URLs
+name = "APP_NAME"
+value = "Med-System"
+
+name = "APP_URL"
+value = "https://${{RAILWAY_PUBLIC_DOMAIN}}"
+
+name = "WEB_URL"
+value = "https://web-${{RAILWAY_PUBLIC_DOMAIN}}"
+
+[[services.ports]]
+port = 3000
+public = true
+
+[[services.crons]]
+# Scheduled reminder dispatch (9 AM UTC daily)
+schedule = "0 9 * * *"
+command = "curl -X POST ${{RAILWAY_PUBLIC_DOMAIN}}/jobs/dispatch-reminders"

@@ -1,0 +1,63 @@
+# Files to ignore during Railway deployment
+
+# Local development
+.env.local
+.env.*.local
+
+# Node modules (installed during build)
+node_modules/
+**/node_modules/
+
+# Build outputs (rebuilt during deploy)
+dist/
+build/
+*.tsbuildinfo
+
+# Testing
+coverage/
+.nyc_output/
+**/*.test.ts
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Git
+.git/
+.github/
+.gitignore
+
+# Documentation (not needed in container)
+README.md
+DEPLOY.md
+CLAUDE.md
+SETUP_COMPLETE.md
+
+# Docker (not needed when deploying to Railway)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Temporary files
+tmp/
+temp/
+.cache/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Others
+.gitkeep
+*.md
