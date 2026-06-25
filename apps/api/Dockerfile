@@ -10,7 +10,7 @@ COPY package.json package-lock.json* ./
 COPY apps/api ./apps/api
 
 # Install dependencies
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 # Build and generate Prisma
 RUN npm -w @med-system/api run build
@@ -29,7 +29,7 @@ COPY package.json package-lock.json* ./
 COPY apps/api/package.json ./apps/api/
 
 # Install production dependencies
-RUN npm ci --omit=dev
+RUN npm install --legacy-peer-deps --omit=dev
 
 # Copy built app
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
