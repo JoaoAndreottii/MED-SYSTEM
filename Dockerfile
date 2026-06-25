@@ -1,35 +1,34 @@
 FROM node:20-alpine AS builder
 
-WORKDIR /app
+WORKDIR /app/apps/api
 
-# Copy root and apps structure
-COPY package.json package-lock.json tsconfig.json ./
-COPY apps/api ./apps/api
-COPY prisma ./prisma
+# Copy only API files
+COPY apps/api/package.json apps/api/package-lock.json ./
+COPY apps/api/src ./src
+COPY apps/api/tsconfig.json ./
+COPY apps/api/prisma ./prisma
 
 # Install dependencies
 RUN npm install --legacy-peer-deps
 
-# Build API
-WORKDIR /app/apps/api
+# Build with TypeScript
 RUN npx tsc
 
 FROM node:20-alpine
 
-WORKDIR /app
+WORKDIR /app/apps/api
 
-# Copy only runtime files
-COPY package.json package-lock.json ./
-COPY apps/api/package.json ./apps/api/
-COPY prisma ./prisma
+# Copy package files
+COPY apps/api/package.json apps/api/package-lock.json ./
 
-# Install production dependencies
-WORKDIR /app
+# Install only production dependencies
 RUN npm install --legacy-peer-deps --omit=dev
 
-# Copy built code
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
+# Copy built code from builder
+COPY --from=builder /app/apps/api/dist ./dist
 
 EXPOSE 3000
 
-CMD ["node", "/app/apps/api/dist/server.js"]
+ENV NODE_ENV=production
+
+CMD ["node", "dist/server.js"]
