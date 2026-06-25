@@ -3,6 +3,9 @@ import helmet from 'helmet';
 import cors from 'cors';
 import compression from 'compression';
 import healthRouter from './routes/health';
+import authRouter from './modules/auth/auth.routes';
+import clinicRouter from './modules/clinic/clinic.routes';
+import usersRouter from './modules/users/users.routes';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,6 +19,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/', healthRouter);
+app.use('/auth', authRouter);
+app.use('/clinics', clinicRouter);
+app.use('/users', usersRouter);
 
 // 404
 app.use((req: Request, res: Response) => {
@@ -34,3 +40,4 @@ app.listen(PORT, () => {
 });
 
 export default app;
+export { prisma } from '@prisma/client';
