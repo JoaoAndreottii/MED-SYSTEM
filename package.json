@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Medical clinic automation system - MVP with 9 core modules",
   "private": true,
-  "type": "module",
   "workspaces": [
     "apps/*",
     "packages/*"
