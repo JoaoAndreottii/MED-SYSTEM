@@ -1,18 +1,35 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy root files
+COPY package.json package-lock.json ./
+
+# Copy web app
+COPY apps/web ./apps/web
+
+# Install all dependencies (including devDependencies for build)
+RUN npm install --legacy-peer-deps
+
+# Build Next.js
+RUN npm -w @med-system/web run build
+
+# Production stage
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy root package files
+# Copy root files
 COPY package.json package-lock.json ./
 
-# Copy apps
+# Copy web app
 COPY apps/web ./apps/web
 
-# Install dependencies
-RUN npm install --legacy-peer-deps --workspace=@med-system/web --production
+# Install production dependencies only
+RUN npm install --legacy-peer-deps --omit=dev
 
-# Build Next.js
-RUN npm -w @med-system/web run build
+# Copy built app from builder
+COPY --from=builder /app/apps/web/.next /app/apps/web/.next
 
 # Set environment
 ENV NODE_ENV=production
