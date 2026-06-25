@@ -6,14 +6,6 @@ import healthRouter from './routes/health';
 import authRouter from './modules/auth/auth.routes';
 import clinicRouter from './modules/clinic/clinic.routes';
 import usersRouter from './modules/users/users.routes';
-import appointmentsRouter from './modules/appointments/appointments.routes';
-import remindersRouter from './modules/reminders/reminders.routes';
-import noShowsRouter from './modules/noshows/noshows.routes';
-import patientsRouter from './modules/patients/patients.routes';
-import financialRouter from './modules/financial/financial.routes';
-import examsRouter from './modules/exams/exams.routes';
-import feedbackRouter from './modules/feedback/feedback.routes';
-import marketingRouter from './modules/marketing/marketing.routes';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,14 +22,6 @@ app.use('/', healthRouter);
 app.use('/auth', authRouter);
 app.use('/clinics', clinicRouter);
 app.use('/users', usersRouter);
-app.use('/appointments', appointmentsRouter);
-app.use('/reminders', remindersRouter);
-app.use('/noshows', noShowsRouter);
-app.use('/patients', patientsRouter);
-app.use('/financial', financialRouter);
-app.use('/exams', examsRouter);
-app.use('/feedback', feedbackRouter);
-app.use('/marketing', marketingRouter);
 
 // 404
 app.use((req: Request, res: Response) => {
