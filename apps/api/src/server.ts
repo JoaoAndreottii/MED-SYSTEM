@@ -1,7 +1,4 @@
 import express, { Request, Response } from 'express';
-import helmet from 'helmet';
-import cors from 'cors';
-import compression from 'compression';
 import healthRouter from './routes/health';
 import authRouter from './modules/auth/auth.routes';
 import clinicRouter from './modules/clinic/clinic.routes';
@@ -10,10 +7,7 @@ import usersRouter from './modules/users/users.routes';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(helmet());
-app.use(cors());
-app.use(compression());
+// Minimal middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
