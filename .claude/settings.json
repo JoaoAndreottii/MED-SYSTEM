@@ -14,7 +14,8 @@
       "Bash(timeout 240 bash -c 'until curl -s https://med-systemapi-production.up.railway.app/health 2>&1 | grep -q '\"'\"'ok'\"'\"'; do sleep 4; done; curl -s https://med-systemapi-production.up.railway.app/health')",
       "Bash(timeout 300 bash -c 'for i in {1..30}; do sleep 5; echo \"Tentativa $i...\"; curl -s https://med-systemapi-production.up.railway.app/health 2>&1 | grep -q \"ok\" && echo \"✅ FUNCIONA!\" && break || echo \"❌ Ainda 502\"; done')",
       "Bash(timeout 5 node dist/server.js)",
-      "Bash(timeout 300 bash -c 'for i in {1..30}; do sleep 5; echo \"Tentativa $i...\"; if curl -s https://med-systemapi-production.up.railway.app/health 2>&1 | grep -q \"ok\"; then echo \"✅ FUNCIONA!\"; curl -s https://med-systemapi-production.up.railway.app/health; break; else echo \"❌ Ainda 502\"; fi; done')"
+      "Bash(timeout 300 bash -c 'for i in {1..30}; do sleep 5; echo \"Tentativa $i...\"; if curl -s https://med-systemapi-production.up.railway.app/health 2>&1 | grep -q \"ok\"; then echo \"✅ FUNCIONA!\"; curl -s https://med-systemapi-production.up.railway.app/health; break; else echo \"❌ Ainda 502\"; fi; done')",
+      "Bash(timeout 240 bash -c 'for i in {1..24}; do sleep 5; if curl -s https://med-systemapi-production.up.railway.app/health 2>&1 | grep -q \"ok\"; then echo \"✅ FUNCIONOU!\"; curl -s https://med-systemapi-production.up.railway.app/health; break; else echo \"[$i] 502\"; fi; done')"
     ]
   }
 }
