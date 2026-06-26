@@ -8,8 +8,8 @@ COPY . .
 # Install all dependencies
 RUN npm install --legacy-peer-deps
 
-# Generate Prisma client BEFORE build
-RUN npx prisma generate
+# Generate Prisma client with explicit schema path
+RUN npx prisma generate --schema=/app/prisma/schema.prisma
 
 # Build directly with tsc
 WORKDIR /app/apps/api
