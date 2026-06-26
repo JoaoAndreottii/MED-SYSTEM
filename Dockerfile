@@ -2,12 +2,10 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copiar apenas arquivo .js simples
-COPY apps/api/src/server.js ./
+COPY api-server.js .
 
-# Instalar apenas Express
-RUN npm install express
+RUN apk add --no-cache npm && npm install express
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["node", "api-server.js"]
