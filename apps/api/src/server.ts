@@ -1,22 +1,18 @@
 import express, { Request, Response } from 'express';
-import healthRouter from './routes/health';
-import authRouter from './modules/auth/auth.routes';
-import clinicRouter from './modules/clinic/clinic.routes';
-import usersRouter from './modules/users/users.routes';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Minimal middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Routes
-app.use('/', healthRouter);
-// Temporarily disabled to debug 502 errors
-// app.use('/auth', authRouter);
-// app.use('/clinics', clinicRouter);
-// app.use('/users', usersRouter);
+// Simple health check - no imports, no dependencies
+app.get('/health', (req: Request, res: Response) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
+});
 
 // 404
 app.use((req: Request, res: Response) => {
@@ -24,15 +20,14 @@ app.use((req: Request, res: Response) => {
 });
 
 // Error handler
-app.use((err: Error, req: Request, res: Response) => {
-  console.error(err);
+app.use((err: any, req: Request, res: Response) => {
+  console.error('Error:', err);
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
-// Start server
-app.listen(PORT, () => {
+// Start
+const server = app.listen(PORT, () => {
   console.log(`🚀 Server listening on port ${PORT}`);
 });
 
-export { getPrisma as prisma } from './lib/prisma';
 export default app;
