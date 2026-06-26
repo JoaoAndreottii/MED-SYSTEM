@@ -20,16 +20,18 @@ WORKDIR /app
 COPY package.json ./
 COPY apps/api/package.json ./apps/api/
 
-# Install only production deps
+# Install only production deps for root
+RUN npm install --legacy-peer-deps --omit=dev
+
+# Also install api deps
+WORKDIR /app/apps/api
 RUN npm install --legacy-peer-deps --omit=dev
 
 # Copy compiled output from builder
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
-COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+COPY --from=builder /app/apps/api/dist ./dist
+COPY --from=builder /app/apps/api/prisma ./prisma
 
 EXPOSE 3000
 ENV NODE_ENV=production
 
-WORKDIR /app/apps/api
 CMD ["node", "dist/server.js"]
