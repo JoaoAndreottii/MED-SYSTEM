@@ -1,20 +1,25 @@
 FROM node:20-alpine
 
-WORKDIR /app/apps/api
+WORKDIR /app
 
-# Copy only API files
-COPY apps/api/package.json ./
-COPY apps/api/src ./src
-COPY apps/api/tsconfig.json ./
-COPY apps/api/prisma ./prisma
+# Copy root package files
+COPY package.json ./
+
+# Copy API directory
+COPY apps/api ./apps/api
 
 # Install dependencies
 RUN npm install --legacy-peer-deps
 
-# Build
+# Generate Prisma
+RUN npx prisma generate --schema=/app/apps/api/prisma/schema.prisma
+
+# Build API
+WORKDIR /app/apps/api
 RUN npx tsc
 
 EXPOSE 3000
 ENV NODE_ENV=production
 
+WORKDIR /app/apps/api
 CMD ["node", "dist/server.js"]
