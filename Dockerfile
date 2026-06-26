@@ -6,18 +6,21 @@ WORKDIR /app
 COPY . .
 
 # Install all dependencies
-RUN npm install --legacy-peer-deps 2>&1 | tail -20
+RUN npm install --legacy-peer-deps
 
-# Build directly with tsc (no npm script)
+# Generate Prisma client BEFORE build
+RUN npx prisma generate
+
+# Build directly with tsc
 WORKDIR /app/apps/api
-RUN npx tsc 2>&1 | tail -20
+RUN npx tsc
 
 # Verify build worked
 RUN test -f dist/server.js || (echo "Build failed!" && exit 1)
 
 # Remove dev deps
 WORKDIR /app
-RUN npm prune --omit=dev 2>&1 | tail -10
+RUN npm prune --omit=dev
 
 EXPOSE 3000
 ENV NODE_ENV=production
