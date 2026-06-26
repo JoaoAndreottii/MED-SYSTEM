@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import jwt, { Secret } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../../server';
 
@@ -99,7 +99,7 @@ export class AuthService {
   }
 
   private generateToken(userId: string): string {
-    return jwt.sign({ sub: userId }, this.jwtSecret, {
+    return jwt.sign({ sub: userId }, this.jwtSecret as Secret, {
       expiresIn: this.jwtExpiry,
     });
   }
