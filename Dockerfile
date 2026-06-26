@@ -1,6 +1,27 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY . .
+RUN npm install --legacy-peer-deps
+WORKDIR /app/apps/api
+RUN npx prisma generate && npm run build
+
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Test: just run node directly
-CMD ["node", "-e", "require('http').createServer((req,res)=>{res.writeHead(200);res.end(JSON.stringify({status:'ok',time:new Date().toISOString()}))}).listen(3000,'0.0.0.0',()=>console.log('Server listening'))"]
+COPY package.json ./
+COPY apps/api/package.json ./apps/api/
+
+RUN npm install --legacy-peer-deps --omit=dev
+WORKDIR /app/apps/api
+RUN npm install --legacy-peer-deps --omit=dev
+
+COPY --from=builder /app/apps/api/dist ./dist
+COPY --from=builder /app/apps/api/prisma ./prisma
+
+EXPOSE 3000
+ENV NODE_ENV=production
+
+CMD ["node", "dist/server.js"]
