@@ -22,7 +22,7 @@ app.use((err: any, req: any, res: any) => {
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server listening on port ${PORT}`);
 });
 
