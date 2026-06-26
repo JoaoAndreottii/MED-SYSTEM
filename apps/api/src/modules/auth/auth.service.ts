@@ -99,7 +99,7 @@ export class AuthService {
   }
 
   private generateToken(userId: string): string {
-    return jwt.sign({ sub: userId }, this.jwtSecret as Secret, {
+    return (jwt.sign as any)({ sub: userId }, this.jwtSecret, {
       expiresIn: this.jwtExpiry,
     });
   }
