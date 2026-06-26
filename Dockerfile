@@ -1,11 +1,13 @@
 FROM node:20-alpine
 
-WORKDIR /app/apps/api
+WORKDIR /app
 
 COPY apps/api/package.json ./
-COPY apps/api/src/server.js ./
+COPY apps/api/package-lock.json* ./
 
 RUN npm install express
+
+COPY apps/api/src/server.js ./
 
 EXPOSE 3000
 
