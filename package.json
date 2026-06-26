@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "description": "Medical clinic automation system - MVP with 9 core modules",
   "private": true,
-  "workspaces": [
-    "apps/*"
-  ],
   "scripts": {
     "dev": "cd apps/api && npm run dev",
     "build": "cd apps/api && npm run build",
