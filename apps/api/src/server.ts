@@ -13,9 +13,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/', healthRouter);
-app.use('/auth', authRouter);
-app.use('/clinics', clinicRouter);
-app.use('/users', usersRouter);
+// Temporarily disabled to debug 502 errors
+// app.use('/auth', authRouter);
+// app.use('/clinics', clinicRouter);
+// app.use('/users', usersRouter);
 
 // 404
 app.use((req: Request, res: Response) => {
