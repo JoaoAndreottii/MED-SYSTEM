@@ -3,7 +3,7 @@ FROM node:20-alpine
 WORKDIR /app/apps/api
 
 # Copy only API files
-COPY apps/api/package.json apps/api/package-lock.json ./
+COPY apps/api/package.json ./
 COPY apps/api/src ./src
 COPY apps/api/tsconfig.json ./
 COPY apps/api/prisma ./prisma
