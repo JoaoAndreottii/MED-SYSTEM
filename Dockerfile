@@ -1,29 +1,20 @@
 FROM node:20-alpine
 
-WORKDIR /app
+WORKDIR /app/apps/api
 
-# Copy everything
-COPY . .
+# Copy only API files
+COPY apps/api/package.json apps/api/package-lock.json ./
+COPY apps/api/src ./src
+COPY apps/api/tsconfig.json ./
+COPY apps/api/prisma ./prisma
 
-# Install all dependencies
+# Install dependencies
 RUN npm install --legacy-peer-deps
 
-# Generate Prisma client with explicit schema path
-RUN npx prisma generate --schema=/app/apps/api/prisma/schema.prisma
-
-# Build directly with tsc
-WORKDIR /app/apps/api
+# Build
 RUN npx tsc
-
-# Verify build worked
-RUN test -f dist/server.js || (echo "Build failed!" && exit 1)
-
-# Remove dev deps
-WORKDIR /app
-RUN npm prune --omit=dev
 
 EXPOSE 3000
 ENV NODE_ENV=production
 
-WORKDIR /app/apps/api
 CMD ["node", "dist/server.js"]
