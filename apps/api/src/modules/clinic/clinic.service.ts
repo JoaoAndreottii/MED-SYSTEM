@@ -1,4 +1,4 @@
-import { prisma } from '../../server';
+import { getPrisma } from '../../lib/prisma';
 
 export interface CreateClinicInput {
   name: string;
@@ -12,7 +12,7 @@ export interface CreateClinicInput {
 
 export class ClinicService {
   async create(input: CreateClinicInput) {
-    return prisma.clinic.create({
+    return getPrisma().clinic.create({
       data: {
         name: input.name,
         email: input.email,
@@ -26,18 +26,18 @@ export class ClinicService {
   }
 
   async findById(id: string) {
-    const clinic = await prisma.clinic.findUnique({ where: { id } });
+    const clinic = await getPrisma().clinic.findUnique({ where: { id } });
     if (!clinic) throw new Error('Clinic not found');
     return clinic;
   }
 
   async list() {
-    return prisma.clinic.findMany({ where: { isActive: true } });
+    return getPrisma().clinic.findMany({ where: { isActive: true } });
   }
 
   async update(id: string, input: Partial<CreateClinicInput>) {
     await this.findById(id);
-    return prisma.clinic.update({
+    return getPrisma().clinic.update({
       where: { id },
       data: input,
     });
@@ -45,7 +45,7 @@ export class ClinicService {
 
   async delete(id: string) {
     await this.findById(id);
-    return prisma.clinic.update({
+    return getPrisma().clinic.update({
       where: { id },
       data: { isActive: false },
     });

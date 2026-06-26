@@ -1,6 +1,6 @@
 import jwt, { Secret } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { prisma } from '../../server';
+import { getPrisma } from '../../lib/prisma';
 
 export interface LoginInput {
   email: string;
@@ -26,7 +26,7 @@ export class AuthService {
   private jwtExpiry = process.env.JWT_EXPIRES_IN || '24h';
 
   async login(input: LoginInput): Promise<AuthResponse> {
-    const user = await prisma.user.findUnique({
+    const user = await getPrisma().user.findUnique({
       where: { email: input.email },
     });
 
@@ -54,7 +54,7 @@ export class AuthService {
   }
 
   async register(input: RegisterInput): Promise<AuthResponse> {
-    const existing = await prisma.user.findUnique({
+    const existing = await getPrisma().user.findUnique({
       where: { email: input.email },
     });
 
@@ -64,7 +64,7 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(input.password, 10);
 
-    const user = await prisma.user.create({
+    const user = await getPrisma().user.create({
       data: {
         email: input.email,
         password: hashedPassword,

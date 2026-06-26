@@ -39,7 +39,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Server listening on port ${PORT}`);
 });
 
-import { PrismaClient } from '@prisma/client';
-export const prisma = new PrismaClient();
-
+export { getPrisma as prisma } from './lib/prisma';
 export default app;

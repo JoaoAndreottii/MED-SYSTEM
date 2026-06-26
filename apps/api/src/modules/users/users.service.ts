@@ -1,4 +1,4 @@
-import { prisma } from '../../server';
+import { getPrisma } from '../../lib/prisma';
 import bcrypt from 'bcryptjs';
 
 export interface CreateUserInput {
@@ -11,7 +11,7 @@ export interface CreateUserInput {
 
 export class UsersService {
   async create(input: CreateUserInput) {
-    const existing = await prisma.user.findUnique({
+    const existing = await getPrisma().user.findUnique({
       where: { email: input.email },
     });
 
@@ -19,7 +19,7 @@ export class UsersService {
 
     const hashedPassword = await bcrypt.hash(input.password, 10);
 
-    return prisma.user.create({
+    return getPrisma().user.create({
       data: {
         email: input.email,
         password: hashedPassword,
@@ -39,7 +39,7 @@ export class UsersService {
   }
 
   async findById(id: string) {
-    return prisma.user.findUnique({
+    return getPrisma().user.findUnique({
       where: { id },
       select: {
         id: true,
@@ -51,7 +51,7 @@ export class UsersService {
   }
 
   async listByClinic(clinicId: string) {
-    return prisma.user.findMany({
+    return getPrisma().user.findMany({
       where: {
         clinics: {
           some: { id: clinicId },
@@ -67,7 +67,7 @@ export class UsersService {
   }
 
   async updateRole(userId: string, role: string) {
-    return prisma.user.update({
+    return getPrisma().user.update({
       where: { id: userId },
       data: { role: role as any },
       select: {
@@ -80,7 +80,7 @@ export class UsersService {
   }
 
   async deactivate(userId: string) {
-    return prisma.user.update({
+    return getPrisma().user.update({
       where: { id: userId },
       data: { isActive: false },
     });
